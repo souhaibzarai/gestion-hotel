@@ -349,7 +349,9 @@ const Reservations = () => {
                     <TableCell>{r.checkInDate}</TableCell>
                     <TableCell>{r.checkOutDate}</TableCell>
                     <TableCell>
-                      {!r.paymentMethod || r.paymentMethod === 'Non défini' ? (
+                      {['Terminée', 'Annulée'].includes(r.status) ? (
+                        <Badge className={getStatusColor(r.status)}>{r.status}</Badge>
+                      ) : !r.paymentMethod || r.paymentMethod === 'Non défini' ? (
                         <span className="text-muted-foreground italic">Définir la méthode</span>
                       ) : (
                         <Select value={r.status} onValueChange={(val) => handleStatusChange(r.id, val)}>
@@ -365,7 +367,6 @@ const Reservations = () => {
                         </Select>
                       )}
                     </TableCell>
-
                     <TableCell>{r.totalAmount} €</TableCell>
                     <TableCell>
                       {!r.paymentMethod || r.paymentMethod === 'Non défini' ? (
