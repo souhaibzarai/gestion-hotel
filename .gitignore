@@ -1,0 +1,31 @@
+# Node modules (React)
+hotel-pulse-system/node_modules/
+hotel-pulse-system/build/
+hotel-pulse-system/.env.local
+hotel-pulse-system/.next/
+hotel-pulse-system/dist/
+hotel-pulse-system/.cache/
+
+# Laravel
+hotel-backend/vendor/
+hotel-backend/storage/
+hotel-backend/.env
+hotel-backend/.env.example.local
+
+# OS/IDE junk
+.DS_Store
+Thumbs.db
+*.log
+*.lock
+*.tmp
+*.swp
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Composer lock (optional)
+# hotel-backend/composer.lock
+
+# NPM lock (optional)
+# hotel-pulse-system/package-lock.json
