@@ -373,6 +373,8 @@ const Reservations = () => {
                         <span className="text-muted-foreground italic">Définir la méthode</span>
                       ) : r.status === 'Terminée' ? (
                         <Badge className={getPaymentStatusColor('Payé')}>Payé</Badge>
+                      ) : r.status === 'Annulée' ? (
+                        <span className="text-muted-foreground italic">—</span>
                       ) : (
                         <Select value={r.paymentStatus} onValueChange={(val) => handlePaymentChange(r.id, val)}>
                           <SelectTrigger className="w-[140px]">
@@ -388,7 +390,9 @@ const Reservations = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      {['Annulée', 'Terminée'].includes(r.status) ? (
+                      {r.status === 'Annulée' ? (
+                        <span className="text-muted-foreground italic">—</span>
+                      ) : ['Annulée', 'Terminée'].includes(r.status) ? (
                         <span className="text-muted-foreground italic">{r.paymentMethod || 'Non défini'}</span>
                       ) : (
                         <Select
