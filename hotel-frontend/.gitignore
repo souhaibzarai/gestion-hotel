@@ -1,0 +1,22 @@
+# Node modules and bun
+node_modules/
+bun.lockb
+
+# Build output
+dist/
+build/
+.vite/
+
+# Logs and system files
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# Optional: env files
+.env
+.env.local
+.env.*.local

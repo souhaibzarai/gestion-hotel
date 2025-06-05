@@ -1,10 +1,10 @@
 # Node modules (React)
-hotel-pulse-system/node_modules/
-hotel-pulse-system/build/
-hotel-pulse-system/.env.local
-hotel-pulse-system/.next/
-hotel-pulse-system/dist/
-hotel-pulse-system/.cache/
+hotel-frontend/node_modules/
+hotel-frontend/build/
+hotel-frontend/.env.local
+hotel-frontend/.next/
+hotel-frontend/dist/
+hotel-frontend/.cache/
 
 # Laravel
 hotel-backend/vendor/
@@ -28,4 +28,4 @@ Thumbs.db
 # hotel-backend/composer.lock
 
 # NPM lock (optional)
-# hotel-pulse-system/package-lock.json
+# hotel-frontend/package-lock.json
