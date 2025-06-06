@@ -52,7 +52,7 @@ export default function Login() {
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Démo: admin@admin.com / admin
+                  Admin Cred: admin@admin.com / 123456
                 </div>
               </div>
               <div className="space-y-2">
@@ -70,7 +70,7 @@ export default function Login() {
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Réceptionniste: receptionist@hotel.com / reception
+                  User Cred: test@test.com / test123
                 </div>
               </div>
             </CardContent>
