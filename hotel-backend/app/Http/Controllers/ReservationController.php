@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReservationController extends Controller
 {
@@ -95,5 +96,14 @@ class ReservationController extends Controller
         $reservation->save();
 
         return response()->json($reservation);
+    }
+
+    public function downloadInvoice($id)
+    {
+        $reservation = Reservation::with(['client', 'room'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.invoice', ['reservation' => $reservation]);
+
+        return $pdf->download("facture_reservation_{$id}.pdf");
     }
 }
