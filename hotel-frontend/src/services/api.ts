@@ -3,6 +3,7 @@ import { Room } from "@/models/Room";
 import { Client } from "@/models/Client";
 import { Reservation } from "@/models/Reservations";
 import { DashboardStats } from "./DashboardStats";
+import { User, UserPayload } from "@/models/User";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -75,28 +76,43 @@ export const createUser = async (userData: {
   email: string;
   password: string;
   role: 'admin' | 'user';
-}) => {
+}): Promise<User> => {
   const res = await fetch(`${API_BASE}/users`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(userData),
   });
-  if (!res.ok) throw new Error("Erreur lors de la création de l'utilisateur");
-  return await res.json();
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const error = new Error(data.message || 'Erreur serveur') as ApiValidationError;
+    error.details = data.errors;
+    throw error;
+  }
+
+  return data;
 };
 
-export const updateUser = async (id: number, userData: {
-  name?: string;
-  email?: string;
-  password?: string;
-  role?: 'admin' | 'user';
-}) => {
+export const updateUser = async (
+  id: number,
+  userData: Partial<UserPayload>
+): Promise<User> => {
   const res = await fetch(`${API_BASE}/users/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(userData),
   });
-  if (!res.ok) throw new Error("Erreur lors de la mise à jour de l'utilisateur");
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const error = new Error(result.message || 'Erreur serveur') as ApiValidationError;
+    error.details = result.errors;
+    throw error;
+  }
+
+  return result;
 };
 
 export const deleteUser = async (id: number) => {

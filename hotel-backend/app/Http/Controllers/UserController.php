@@ -43,30 +43,55 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!$this->isAdmin()) return response()->json(['message' => 'Unauthorized'], 403);
-
         $user = User::findOrFail($id);
+        $authUser = auth()->user();
 
-        $user->update([
-            'name' => $request->name ?? $user->name,
-            'email' => $request->email ?? $user->email,
-            'role' => $request->role ?? $user->role,
+        $request->merge([
+            'role' => $request->input('role', $user->role),
         ]);
 
-        if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+        if ($user->email === 'admin@admin.com' && $request->email !== $user->email) {
+            return response()->json(['message' => 'Impossible de modifier l\'email de l\'administrateur principal'], 403);
         }
 
-        return response()->json(['message' => 'Utilisateur mis à jour']);
+        if ($authUser->id === $user->id && $request->role !== 'admin') {
+            return response()->json(['message' => 'Vous ne pouvez pas modifier votre propre rôle'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'role' => 'required|in:admin,user',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $data = $request->only(['name', 'email', 'password', 'role']);
+
+        if (!$request->filled('password')) {
+            unset($data['password']);
+        } else {
+            $data['password'] = bcrypt($data['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json($user);
     }
 
     public function destroy($id)
     {
-        if (!$this->isAdmin()) return response()->json(['message' => 'Unauthorized'], 403);
-
         $user = User::findOrFail($id);
-        $user->delete();
 
+        if ($user->email === 'admin@admin.com') {
+            return response()->json(['message' => 'Impossible de supprimer le compte administrateur principal'], 403);
+        }
+
+        // Prevent self-deletion
+        if (auth()->id() === $user->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte'], 403);
+        }
+
+        $user->delete();
         return response()->json(['message' => 'Utilisateur supprimé']);
     }
 }

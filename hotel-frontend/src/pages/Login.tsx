@@ -24,7 +24,7 @@ export default function Login() {
           <div className="bg-primary rounded-full p-3 mb-4">
             <Hotel className="h-8 w-8 text-white" strokeWidth={2} />
           </div>
-          <h1 className="text-3xl font-bold text-center">HotelManager</h1>
+          <h1 className="text-3xl font-bold text-center">Gestion D'hotel</h1>
           <p className="text-muted-foreground text-center mt-2">Système de gestion hôtelière</p>
         </div>
 
@@ -52,7 +52,7 @@ export default function Login() {
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Démo: admin@hotel.com / admin
+                  Démo: admin@admin.com / admin
                 </div>
               </div>
               <div className="space-y-2">
