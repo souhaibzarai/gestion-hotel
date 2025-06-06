@@ -2,12 +2,116 @@ import { ApiValidationError } from "./ApiValidationError";
 import { Room } from "@/models/Room";
 import { Client } from "@/models/Client";
 import { Reservation } from "@/models/Reservations";
+import { DashboardStats } from "./DashboardStats";
 
 const API_BASE = "http://localhost:8000/api";
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+}
+
+// Auth
+export async function login(email: string, password: string) {
+  const res = await fetch(`${API_BASE}/login`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Erreur de connexion');
+  }
+
+  return data;
+}
+
+// Settings
+export const fetchSettings = async (): Promise<Record<string, string>> => {
+  const res = await fetch(`${API_BASE}/settings`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Erreur lors du chargement des paramètres");
+
+  return await res.json();
+};
+
+export const updateSettings = async (data: Record<string, string | number>) => {
+  const res = await fetch(`${API_BASE}/settings`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) throw new Error("Erreur lors de la mise à jour des paramètres");
+
+  return await res.json();
+};
+
+// Users
+export const fetchUsers = async () => {
+  const res = await fetch(`${API_BASE}/users`, {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error("Erreur lors du chargement des utilisateurs");
+  return await res.json();
+};
+
+export const createUser = async (userData: {
+  name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'user';
+}) => {
+  const res = await fetch(`${API_BASE}/users`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error("Erreur lors de la création de l'utilisateur");
+  return await res.json();
+};
+
+export const updateUser = async (id: number, userData: {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: 'admin' | 'user';
+}) => {
+  const res = await fetch(`${API_BASE}/users/${id}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error("Erreur lors de la mise à jour de l'utilisateur");
+};
+
+export const deleteUser = async (id: number) => {
+  const res = await fetch(`${API_BASE}/users/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error("Erreur lors de la suppression de l'utilisateur");
+};
+
 // Rooms
 export const fetchRooms = async (): Promise<Room[]> => {
-  const res = await fetch(`${API_BASE}/rooms`);
+  const res = await fetch(`${API_BASE}/rooms`, {
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Failed to fetch rooms");
   return await res.json();
 };
@@ -15,7 +119,7 @@ export const fetchRooms = async (): Promise<Room[]> => {
 export const createRoom = async (roomData: Omit<Room, 'id'>): Promise<Room> => {
   const res = await fetch(`${API_BASE}/rooms`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(roomData),
   });
 
@@ -33,7 +137,7 @@ export const createRoom = async (roomData: Omit<Room, 'id'>): Promise<Room> => {
 export const updateRoomStatus = async (id: number, status: string): Promise<Room> => {
   const res = await fetch(`${API_BASE}/rooms/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ status }),
   });
 
@@ -50,6 +154,7 @@ export const updateRoomStatus = async (id: number, status: string): Promise<Room
 
 export const deleteRoom = async (id: number): Promise<void> => {
   const res = await fetch(`${API_BASE}/rooms/${id}`, {
+    headers: getAuthHeaders(),
     method: 'DELETE',
   });
 
@@ -64,7 +169,9 @@ export const deleteRoom = async (id: number): Promise<void> => {
 
 // Clients
 export async function fetchClients() {
-  const res = await fetch("http://localhost:8000/api/clients");
+  const res = await fetch(`${API_BASE}/clients`, {
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Erreur lors du chargement des clients");
   return res.json();
 }
@@ -72,7 +179,7 @@ export async function fetchClients() {
 export const createClient = async (clientData: Omit<Client, "id" | "created_at" | "updated_at">) => {
   const res = await fetch(`${API_BASE}/clients`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(clientData),
   });
 
@@ -87,7 +194,7 @@ export const createClient = async (clientData: Omit<Client, "id" | "created_at" 
 export const updateClient = async (id: number, data: Partial<Client>): Promise<Client> => {
   const res = await fetch(`${API_BASE}/clients/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -98,10 +205,12 @@ export const updateClient = async (id: number, data: Partial<Client>): Promise<C
 
   return await res.json();
 };
-// Reservations
 
+// Reservations
 export const fetchReservations = async (): Promise<Reservation[]> => {
-  const res = await fetch(`${API_BASE}/reservations`);
+  const res = await fetch(`${API_BASE}/reservations`, {
+    headers: getAuthHeaders(),
+  });
   if (!res.ok) throw new Error("Erreur lors du chargement des réservations");
   return await res.json();
 };
@@ -120,7 +229,7 @@ export const createReservation = async (
 ): Promise<Reservation> => {
   const res = await fetch(`${API_BASE}/reservations`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -138,7 +247,7 @@ export const updateReservationStatus = async (
 ): Promise<Reservation> => {
   const res = await fetch(`${API_BASE}/reservations/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -156,7 +265,7 @@ export const updateReservationPayment = async (
 ): Promise<Reservation> => {
   const res = await fetch(`${API_BASE}/reservations/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -174,7 +283,7 @@ export const updateReservationMethod = async (
 ): Promise<Reservation> => {
   const res = await fetch(`${API_BASE}/reservations/${id}/method`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -186,3 +295,35 @@ export const updateReservationMethod = async (
 
   return await res.json();
 };
+
+export const downloadInvoice = async (reservationId: number): Promise<void> => {
+  const res = await fetch(`${API_BASE}/reservations/${reservationId}/invoice`, {
+    headers: getAuthHeaders()
+  });
+
+  if (!res.ok) throw new Error("Erreur lors du téléchargement");
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `facture_reservation_${reservationId}.pdf`;
+  link.click();
+
+  window.URL.revokeObjectURL(url);
+};
+
+// Dashboard
+
+export async function fetchDashboardStats(): Promise<DashboardStats> {
+  const res = await fetch(`${API_BASE}/dashboard`, {
+    headers: getAuthHeaders()
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch dashboard stats");
+  }
+
+  return res.json();
+}

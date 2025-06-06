@@ -1,13 +1,13 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { login as apiLogin } from '@/services/api';
 
 interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'receptionist';
+  role: 'admin' | 'user';
 }
 
 interface AuthContextType {
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check for existing session on mount
+  // On app mount: check for saved user
   useEffect(() => {
     const storedUser = localStorage.getItem('hotelmanager_user');
     if (storedUser) {
@@ -38,36 +38,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // This would be an API call in a real application
-      // For now, let's simulate a successful login with mock data
-      if (email === 'admin@hotel.com' && password === 'admin') {
-        const mockUser = {
-          id: 1,
-          name: 'Admin User',
-          email: 'admin@hotel.com',
-          role: 'admin' as const
-        };
-        setUser(mockUser);
-        localStorage.setItem('hotelmanager_user', JSON.stringify(mockUser));
-        toast.success('Connexion réussie!');
-        navigate('/dashboard');
-      } else if (email === 'receptionist@hotel.com' && password === 'reception') {
-        const mockUser = {
-          id: 2,
-          name: 'Receptionist User',
-          email: 'receptionist@hotel.com',
-          role: 'receptionist' as const
-        };
-        setUser(mockUser);
-        localStorage.setItem('hotelmanager_user', JSON.stringify(mockUser));
-        toast.success('Connexion réussie!');
-        navigate('/dashboard');
-      } else {
-        toast.error('Email ou mot de passe incorrect');
-      }
-    } catch (error) {
-      toast.error('Une erreur est survenue durant la connexion');
-      console.error('Login error:', error);
+      const res = await apiLogin(email, password);
+
+      localStorage.setItem('token', res.access_token);
+      localStorage.setItem('hotelmanager_user', JSON.stringify(res.user));
+      setUser(res.user);
+
+      toast.success('Connexion réussie!');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error('Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
     }
@@ -76,19 +56,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hotelmanager_user');
+    localStorage.removeItem('token');
     toast.info('Déconnexion réussie');
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
-      isAuthenticated: !!user,
-      isAdmin: user?.role === 'admin'
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

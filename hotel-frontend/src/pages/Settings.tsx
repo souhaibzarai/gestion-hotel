@@ -1,32 +1,51 @@
-
-import { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+import { useEffect, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { fetchSettings, updateSettings } from '@/services/api';
 
 const Settings = () => {
   const { isAdmin } = useAuth();
-  const [hotelName, setHotelName] = useState("Hôtel Example");
-  const [hotelAddress, setHotelAddress] = useState("123 Avenue des Champs-Élysées, 75008 Paris");
-  const [hotelEmail, setHotelEmail] = useState("contact@hotelexample.com");
-  const [hotelPhone, setHotelPhone] = useState("+33 1 23 45 67 89");
-  
-  const [emailNotifications, setEmailNotifications] = useState(true);
+
+  const [hotelName, setHotelName] = useState('');
+  const [hotelAddress, setHotelAddress] = useState('');
+  const [hotelEmail, setHotelEmail] = useState('');
+  const [hotelPhone, setHotelPhone] = useState('');
+
+  const [emailNotifications, setEmailNotifications] = useState(false);
   const [smsNotifications, setSmsNotifications] = useState(false);
-  const [autoCheckout, setAutoCheckout] = useState(true);
-  
+  const [autoCheckout, setAutoCheckout] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await fetchSettings();
+        setHotelName(data.hotel_name || '');
+        setHotelAddress(data.hotel_address || '');
+        setHotelEmail(data.hotel_email || '');
+        setHotelPhone(data.hotel_phone || '');
+        setEmailNotifications(data.email_notifications === '1');
+        setSmsNotifications(data.sms_notifications === '1');
+        setAutoCheckout(data.auto_checkout === '1');
+      } catch {
+        toast.error("Impossible de charger les paramètres");
+      }
+    };
+    load();
+  }, []);
+
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
@@ -40,14 +59,31 @@ const Settings = () => {
     );
   }
 
-  const saveHotelInfo = () => {
-    // In a real app, this would save the data to the server
-    toast.success("Informations de l'hôtel mises à jour");
+  const saveHotelInfo = async () => {
+    try {
+      await updateSettings({
+        hotel_name: hotelName,
+        hotel_address: hotelAddress,
+        hotel_email: hotelEmail,
+        hotel_phone: hotelPhone,
+      });
+      toast.success("Informations de l'hôtel mises à jour");
+    } catch {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   };
-  
-  const saveSystemSettings = () => {
-    // In a real app, this would save the system settings to the server
-    toast.success("Paramètres système mis à jour");
+
+  const saveSystemSettings = async () => {
+    try {
+      await updateSettings({
+        email_notifications: emailNotifications ? 1 : 0,
+        sms_notifications: smsNotifications ? 1 : 0,
+        auto_checkout: autoCheckout ? 1 : 0,
+      });
+      toast.success("Paramètres système mis à jour");
+    } catch {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   };
 
   return (
@@ -56,7 +92,7 @@ const Settings = () => {
         <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
         <p className="text-muted-foreground">Gérez les configurations et paramètres du système</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Informations de l'hôtel</CardTitle>
@@ -68,40 +104,20 @@ const Settings = () => {
           <div className="grid gap-6">
             <div className="grid gap-3">
               <Label htmlFor="hotel-name">Nom de l'hôtel</Label>
-              <Input
-                id="hotel-name"
-                value={hotelName}
-                onChange={(e) => setHotelName(e.target.value)}
-              />
+              <Input id="hotel-name" value={hotelName} onChange={(e) => setHotelName(e.target.value)} />
             </div>
-            
             <div className="grid gap-3">
               <Label htmlFor="hotel-address">Adresse</Label>
-              <Input
-                id="hotel-address"
-                value={hotelAddress}
-                onChange={(e) => setHotelAddress(e.target.value)}
-              />
+              <Input id="hotel-address" value={hotelAddress} onChange={(e) => setHotelAddress(e.target.value)} />
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-3">
                 <Label htmlFor="hotel-email">Email</Label>
-                <Input
-                  id="hotel-email"
-                  type="email"
-                  value={hotelEmail}
-                  onChange={(e) => setHotelEmail(e.target.value)}
-                />
+                <Input id="hotel-email" type="email" value={hotelEmail} onChange={(e) => setHotelEmail(e.target.value)} />
               </div>
-              
               <div className="grid gap-3">
                 <Label htmlFor="hotel-phone">Téléphone</Label>
-                <Input
-                  id="hotel-phone"
-                  value={hotelPhone}
-                  onChange={(e) => setHotelPhone(e.target.value)}
-                />
+                <Input id="hotel-phone" value={hotelPhone} onChange={(e) => setHotelPhone(e.target.value)} />
               </div>
             </div>
           </div>
@@ -110,7 +126,7 @@ const Settings = () => {
           <Button onClick={saveHotelInfo}>Enregistrer</Button>
         </CardFooter>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Paramètres système</CardTitle>
@@ -123,91 +139,34 @@ const Settings = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="email-notifications">Notifications par email</Label>
-                <p className="text-muted-foreground text-sm">
-                  Envoyer des emails aux clients pour les confirmations et rappels
-                </p>
+                <p className="text-muted-foreground text-sm">Envoyer des emails aux clients</p>
               </div>
-              <Switch
-                id="email-notifications"
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
-              />
+              <Switch id="email-notifications" checked={emailNotifications} onCheckedChange={setEmailNotifications} />
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="sms-notifications">Notifications par SMS</Label>
-                <p className="text-muted-foreground text-sm">
-                  Envoyer des SMS aux clients pour les confirmations et rappels
-                </p>
+                <p className="text-muted-foreground text-sm">Envoyer des SMS aux clients</p>
               </div>
-              <Switch
-                id="sms-notifications"
-                checked={smsNotifications}
-                onCheckedChange={setSmsNotifications}
-              />
+              <Switch id="sms-notifications" checked={smsNotifications} onCheckedChange={setSmsNotifications} />
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto-checkout">Checkout automatique</Label>
-                <p className="text-muted-foreground text-sm">
-                  Libérer automatiquement les chambres à l'heure de départ prévue
-                </p>
+                <p className="text-muted-foreground text-sm">Libérer automatiquement les chambres</p>
               </div>
-              <Switch
-                id="auto-checkout"
-                checked={autoCheckout}
-                onCheckedChange={setAutoCheckout}
-              />
+              <Switch id="auto-checkout" checked={autoCheckout} onCheckedChange={setAutoCheckout} />
             </div>
           </div>
         </CardContent>
         <CardFooter>
           <Button onClick={saveSystemSettings}>Enregistrer</Button>
-        </CardFooter>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Gestion des utilisateurs</CardTitle>
-          <CardDescription>
-            Gérez les comptes du personnel ayant accès au système
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-4 bg-muted rounded-md">
-              <div>
-                <p className="font-medium">Admin User</p>
-                <p className="text-sm text-muted-foreground">admin@hotel.com</p>
-                <p className="text-xs text-primary">Administrateur</p>
-              </div>
-              <Button variant="outline" size="sm">
-                Modifier
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-muted rounded-md">
-              <div>
-                <p className="font-medium">Receptionist User</p>
-                <p className="text-sm text-muted-foreground">receptionist@hotel.com</p>
-                <p className="text-xs text-primary">Réceptionniste</p>
-              </div>
-              <Button variant="outline" size="sm">
-                Modifier
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button variant="outline">
-            Ajouter un utilisateur
-          </Button>
         </CardFooter>
       </Card>
     </div>
